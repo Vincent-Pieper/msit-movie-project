@@ -37,9 +37,9 @@ def forwarding_main_menu(main_menu_choice, movies):
     elif main_menu_choice == "3":
         delete_movie(movies)
     elif main_menu_choice == "4":
-        pass
+        update_movie(movies)
     elif main_menu_choice == "5":
-        pass
+        stats_movies(movies)
     elif main_menu_choice == "6":
         pass
     elif main_menu_choice == "7":
@@ -53,12 +53,6 @@ def forwarding_main_menu(main_menu_choice, movies):
             "...Returning to main menu..."
             "\n"
         )
-
-
-def returning_to_main():
-    print()
-    input("Press enter to continue")
-    print()
 
 
 def list_movies(movies):
@@ -84,10 +78,77 @@ def delete_movie(movies):
     if deletion_choice in movies:
         del movies[deletion_choice]
         print(f"Movie {deletion_choice} successfully deleted")
-        returning_to_main()
     else:
         print(f"Movie {deletion_choice} doesn't exist!")
-        returning_to_main()
+    returning_to_main()
+
+
+def update_movie(movies):
+    print()
+    update_choice = input("Enter movie name to update: ")
+    if update_choice in movies:
+        update_movie_rating =  float(input("Enter new movie rating (0-10): "))
+        movies[update_choice] = update_movie_rating
+        print(f"Movie {update_choice} successfully updated")
+    else:
+        print(f"Movie {update_choice} doesn't exist!")
+    returning_to_main()
+
+
+def stats_movies(movies):
+    print()
+    average_rating = average_movies_rating(movies)
+    median_rating = median_movies_rating(movies)
+    best_movie = best_movie_rating(movies) #  return tuple (movie, rating)
+    worst_movie = worst_movie_rating(movies) #  return tuple (movie, rating)
+    printing_stats(average_rating, median_rating, best_movie, worst_movie)
+    returning_to_main()
+
+
+def average_movies_rating(movies):
+    return sum(movies.values()) / len(movies)
+
+
+def median_movies_rating(movies): #  from statistics import median
+    ratings_list_sorted = sorted(list(movies.values()))
+    len_ratings_list = len(ratings_list_sorted)
+    if len_ratings_list % 2 == 0:
+        return (ratings_list_sorted[(len_ratings_list//2)] + ratings_list_sorted[(len_ratings_list//2)-1])/2
+    else:
+        return ratings_list_sorted[len_ratings_list//2]
+
+
+def best_movie_rating(movies):
+    best_rating = -1
+    best_movie = ()
+    for movie in movies.items():
+        if movie[1] > best_rating:
+            best_rating = movie[1]
+            best_movie = movie
+    return best_movie #  tuple (movie, rating)
+
+
+def worst_movie_rating(movies):
+    worst_rating = 11
+    worst_movie = ()
+    for movie in movies.items():
+        if movie[1] < worst_rating:
+            worst_rating = movie[1]
+            worst_movie = movie
+    return worst_movie #  tuple (movie, rating)
+
+
+def printing_stats(average_rating, median_rating, best_movie, worst_movie):
+    print(f"Average rating: {average_rating:.2f}")
+    print(f"Median rating: {median_rating:.2f}")
+    print(f"Best movie: {best_movie[0]}, {best_movie[1]}")
+    print(f"Worst movie: {worst_movie[0]}, {worst_movie[1]}")
+
+
+def returning_to_main():
+    print()
+    input("Press enter to continue")
+    print()
 
 
 def main():
