@@ -1,3 +1,6 @@
+import random
+
+
 def create_database():
     movies = {
         "The Shawshank Redemption": 9.5,
@@ -41,9 +44,9 @@ def forwarding_main_menu(main_menu_choice, movies):
     elif main_menu_choice == "5":
         stats_movies(movies)
     elif main_menu_choice == "6":
-        pass
+        random_movie(movies)
     elif main_menu_choice == "7":
-        pass
+        search_movie(movies)
     elif main_menu_choice == "8":
         pass
     else:
@@ -99,9 +102,9 @@ def stats_movies(movies):
     print()
     average_rating = average_movies_rating(movies)
     median_rating = median_movies_rating(movies)
-    best_movie = best_movie_rating(movies) #  return tuple (movie, rating)
-    worst_movie = worst_movie_rating(movies) #  return tuple (movie, rating)
-    printing_stats(average_rating, median_rating, best_movie, worst_movie)
+    best_movies = best_movie_rating(movies) #  return list with tuple(s) (movie, rating)
+    worst_movies = worst_movie_rating(movies) #  return list with tuple(s) (movie, rating)
+    printing_stats(average_rating, median_rating, best_movies, worst_movies)
     returning_to_main()
 
 
@@ -120,29 +123,69 @@ def median_movies_rating(movies): #  from statistics import median
 
 def best_movie_rating(movies):
     best_rating = -1
-    best_movie = ()
+    best_movies = []
     for movie in movies.items():
         if movie[1] > best_rating:
             best_rating = movie[1]
-            best_movie = movie
-    return best_movie #  tuple (movie, rating)
+            best_movies = [movie]
+        elif movie[1] == best_rating:
+            best_movies.append(movie)
+    return best_movies #  list with tuple(s) (movie, rating)
 
 
 def worst_movie_rating(movies):
     worst_rating = 11
-    worst_movie = ()
+    worst_movies = []
     for movie in movies.items():
         if movie[1] < worst_rating:
             worst_rating = movie[1]
-            worst_movie = movie
-    return worst_movie #  tuple (movie, rating)
+            worst_movies = [movie]
+        elif movie[1] == worst_rating:
+            worst_movies.append(movie)
+    return worst_movies #  list with tuple(s) (movie, rating)
 
 
-def printing_stats(average_rating, median_rating, best_movie, worst_movie):
+def printing_stats(average_rating, median_rating, best_movies, worst_movies):
     print(f"Average rating: {average_rating:.2f}")
     print(f"Median rating: {median_rating:.2f}")
-    print(f"Best movie: {best_movie[0]}, {best_movie[1]}")
-    print(f"Worst movie: {worst_movie[0]}, {worst_movie[1]}")
+    if len(best_movies) > 1:
+        print(f"{len(best_movies)} Movies share the category best movie with a rating of {best_movies[0][1]}")
+        for movie in best_movies:
+            print(f"-{movie[0]}")
+    else:
+        print(f"Best movie: {best_movies[0][0]}, {best_movies[0][1]}")
+    if len(worst_movies) > 1:
+        print(f"{len(worst_movies)} Movies share the category worst movie with a rating of {worst_movies[0][1]}")
+        for movie in worst_movies:
+            print(f"- {movie[0]}")
+    else:
+        print(f"Worst movie: {worst_movies[0][0]}, {worst_movies[0][1]}")
+
+
+def random_movie(movies):
+    print()
+    r_movie, r_rating = random.choice(list(movies.items()))
+    print(f"Your movie for tonight: {r_movie}, it's rated {r_rating}")
+    returning_to_main()
+
+
+def search_movie(movies):
+    print()
+    search_input = input("Enter part of movie name: ").lower()
+    counter = 0
+    for movie, rating in movies.items():
+        if search_input in movie.lower():
+            print(f"{movie}: {rating}")
+            counter += 1
+    if counter == 0:
+        print(f"No movie containing '{search_input}' found.")
+    returning_to_main()
+
+
+#def movies_sorted_ratings(movies):
+
+
+
 
 
 def returning_to_main():
