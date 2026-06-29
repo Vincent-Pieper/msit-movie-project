@@ -1,4 +1,5 @@
 import random
+import matplotlib.pyplot as plt
 
 
 def create_database():
@@ -28,8 +29,9 @@ def choose_from_main_menu():
         "6. Random movie\n"
         "7. Search movie\n"
         "8. Movies sorted by rating\n"
+        "9. Create Rating Histogram\n"
     )
-    return input("Enter choice (1-8): ")
+    return input("Enter choice (1-9): ")
 
 
 def forwarding_main_menu(main_menu_choice, movies):
@@ -48,7 +50,9 @@ def forwarding_main_menu(main_menu_choice, movies):
     elif main_menu_choice == "7":
         search_movie(movies)
     elif main_menu_choice == "8":
-        pass
+        movies_sorted_ratings(movies)
+    elif main_menu_choice == "9":
+        rating_histogram(movies)
     else:
         print(
             "\n"
@@ -151,7 +155,7 @@ def printing_stats(average_rating, median_rating, best_movies, worst_movies):
     if len(best_movies) > 1:
         print(f"{len(best_movies)} Movies share the category best movie with a rating of {best_movies[0][1]}")
         for movie in best_movies:
-            print(f"-{movie[0]}")
+            print(f"- {movie[0]}")
     else:
         print(f"Best movie: {best_movies[0][0]}, {best_movies[0][1]}")
     if len(worst_movies) > 1:
@@ -182,10 +186,32 @@ def search_movie(movies):
     returning_to_main()
 
 
-#def movies_sorted_ratings(movies):
+def movies_sorted_ratings(movies):
+    print()
+    remaining_movies = movies.copy()
+    sorted_movies = []
+    highest_rated_movie = ("x",-1)
+    while len(remaining_movies) > 0:
+        for movie in remaining_movies.items():
+            if movie[1] > highest_rated_movie[1]:
+                highest_rated_movie = movie
+        sorted_movies.append(highest_rated_movie)
+        del remaining_movies[highest_rated_movie[0]]
+        highest_rated_movie = ("x",-1)
+    for film, rating in sorted_movies:
+        print(f"{film}: {rating}")
+    returning_to_main()
 
 
-
+def rating_histogram(movies):
+    print()
+    movie_values = list(movies.values())
+    plt.hist(movie_values, bins = max(5, min(len(movies) // 2 + 5, 50)))
+    plt.xlabel("Rating")
+    plt.ylabel("Number of movies")
+    plt.title("Distribution of movie ratings")
+    plt.show()
+    returning_to_main()
 
 
 def returning_to_main():
