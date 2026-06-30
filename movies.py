@@ -251,13 +251,9 @@ def build_empty_fuzzy_matrix(search_word = "test", compare_word = "tast"):
 
 def fill_first_row_column_fuzzy_matrix(matrix, rows, columns):
     for row in range(rows):
-        for column in range(columns):
-            if row == 0 and column == 0: #  top left is always 0 because it compares two empty strings
-                matrix[row][column] = 0
-            elif row == 0 and column != 0: #  first row gets the value to the left +1
-                matrix[row][column] = matrix[row][column - 1] + 1
-            elif row != 0 and column == 0: #  first column gets the value above +1
-                matrix[row][column] = matrix[row - 1][column] + 1
+        matrix[row][0] = row #  only needs to count up the row
+    for column in range(columns):
+        matrix[0][column] = column
     return matrix
 
 
