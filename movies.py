@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from colorama import Fore, init
 init(autoreset=True)
 
+import movie_storage
+
 
 # Will be pushed to another folder/file later - this is a placeholder.
 ID_KEYS = [
@@ -19,43 +21,24 @@ ID_KEYS = [
 ]
 
 
-DELETED_MOVIES = [
-    {"id": 11, "title": "test-film1", "rating": 7.3, "year of release": 1994},
-    # {"id": 12, "title": "test-film2", "rating": 7.3, "year of release": 1994},
-    {"id": 13, "title": "test-film3", "rating": 7.3, "year of release": 1994},
-]
-
-
 def create_database() -> tuple[dict, dict]:
     """
-    creates a base dictionary AND an additional id_finder.
+    gets movies_db as the base dictionary AND an additional id_finder.
     Both dictionaries are accessible in a tuple database (movies_db, id_finder)
     """
-    movies_db = {
-        1: {"title": "The Shawshank Redemption", "rating": 9.5, "year of release": 1994},
-        2: {"title": "Pulp Fiction", "rating": 8.8, "year of release": 1994},
-        3: {"title": "The Room", "rating": 3.6, "year of release": 2003},
-        4: {"title": "The Godfather", "rating": 9.2, "year of release": 1972},
-        5: {"title": "The Godfather: Part II", "rating": 9.0, "year of release": 1974},
-        6: {"title": "The Dark Knight", "rating": 9.0, "year of release": 2008},
-        7: {"title": "12 Angry Men", "rating": 8.9, "year of release": 1957},
-        8: {"title": "Everything Everywhere All At Once", "rating": 8.9, "year of release": 2022},
-        9: {"title": "Forrest Gump", "rating": 8.8, "year of release": 1994},
-        10: {"title": "Star Wars: Episode V", "rating": 8.7, "year of release": 1980}
-    }
-
+    movies_db = movie_storage.get_movies()
     id_finder = create_id_finder(movies_db)
     return movies_db, id_finder
 
 
-def create_id_finder(database: dict[int, dict[str, object]]) -> dict[str, int]:
+def create_id_finder(movies_db: dict) -> dict[str, int]:
     """
     a function that automatically creates a corresponding
     secondary id_finder to provide title-based access to the db
     """
     id_finder = {}
-    id_key = find_lookup_key(database)
-    for data_id, data in database.items():
+    id_key = find_lookup_key(movies_db)
+    for data_id, data in movies_db.items():
         id_finder[data[id_key]] = data_id
     return id_finder
 
@@ -102,28 +85,28 @@ def choose_from_main_menu() -> str:
     return input(Fore.LIGHTGREEN_EX + "Enter choice (0-9): ")
 
 
-def forwarding_main_menu(main_menu_choice: str, database: tuple[dict, dict]) -> bool:
+def forwarding_main_menu(main_menu_choice: str) -> bool:
     """Forwards the user's menu choice to the matching menu function."""
     if main_menu_choice == "0":
         return terminate_program()
     if main_menu_choice == "1":
-        list_movies(database)
+        list_movies()
     elif main_menu_choice == "2":
-        add_movie(database)
+        add_movie()
     elif main_menu_choice == "3":
-        delete_movie(database)
+        delete_movie()
     elif main_menu_choice == "4":
-        update_movie(database)
+        update_movie()
     elif main_menu_choice == "5":
-        stats_movies(database)
+        stats_movies()
     elif main_menu_choice == "6":
-        random_movie(database)
+        random_movie()
     elif main_menu_choice == "7":
-        search_movie(database)
+        search_movie()
     elif main_menu_choice == "8":
-        movies_sorted_ratings(database)
+        movies_sorted_ratings()
     elif main_menu_choice == "9":
-        rating_histogram(database)
+        rating_histogram()
     else:
         print(Fore.RED +
             "\n"
@@ -140,9 +123,9 @@ def terminate_program():
     return False
 
 
-def list_movies(database: tuple[dict, dict]):
+def list_movies():
     """Prints all movies from the movie database."""
-    movies_db, _ = database
+    movies_db = movie_storage.get_movies()
     print()
     print(Fore.CYAN + f"{len(movies_db)} movies in total")
 
@@ -151,39 +134,32 @@ def list_movies(database: tuple[dict, dict]):
     returning_to_main()
 
 
-def add_movie(database: tuple[dict, dict]):
+def add_movie():
     """Adds a movie and updates movie_db and id_finder"""
-    movies_db, id_finder = database
+    movies_db, id_finder = create_database()
     print()
-    new_title = get_and_check_title_input(database, "add")
+    new_title = get_and_check_title_input(id_finder, "add")
 
-    if new_title:
-        new_id = find_available_id(database)
-        new_year = int(input(Fore.LIGHTGREEN_EX + "Enter movie year: "))
+    if isinstance(new_title, str):
+        new_id = find_available_id(movies_db)
+        new_release = int(input(Fore.LIGHTGREEN_EX + "Enter movie year: "))
         new_rating = float(input(Fore.LIGHTGREEN_EX + "Enter movie rating (0-10): "))
-
-        movies_db[new_id] = {
-            "title": new_title,
-            "rating": new_rating,
-            "year of release": new_year
-        }
-
-        id_finder[new_title] = new_id
+        movie_storage.add_movie((new_id, new_title, new_release, new_rating))
         print(Fore.CYAN + f"Movie '{new_title}' successfully added")
 
     returning_to_main()
 
 
-def find_available_id(database: tuple[dict, dict]) -> int:
+def find_available_id(movies_db: dict) -> int:
     """
     Searches for the lowest available id, that is not in use by either database and trash.
     """
-    movies_db, _ = database
     id_list = []
+    deleted_movies = movie_storage.get_deleted_movies()
 
     for used_id in movies_db:
         id_list.append(used_id)
-    for deleted_movie in DELETED_MOVIES:
+    for deleted_movie in deleted_movies:
         id_list.append(deleted_movie["id"])
     id_list.sort()
 
@@ -196,31 +172,40 @@ def find_available_id(database: tuple[dict, dict]) -> int:
     return new_id
 
 
-def delete_movie(database: tuple[dict, dict]):
+def delete_movie():
     """
     This function accesses the database through the id_finder, and deletes it from database
     """
-    movies_db, id_finder = database
+    _, id_finder = create_database()
     print()
-    deletion_choice = get_and_check_title_input(database, "delete")
+    counter = 0
+    max_tries = 2
+    while True:
+        deletion_choice = get_and_check_title_input(id_finder, "delete")
 
-    if deletion_choice:  # Python treats non-empty strings as True
-        delete_id = id_finder[deletion_choice]
-        handle_deleted_movies(database, delete_id)
-        del id_finder[deletion_choice]
-        del movies_db[delete_id]
-        print(Fore.CYAN + f"Movie '{deletion_choice}' successfully deleted")
+        if deletion_choice:  # Python treats non-empty strings as True
+            delete_id = id_finder[deletion_choice]
+            handle_deleted_movies(delete_id)
+            movie_storage.delete_movie(delete_id)
+            print(Fore.CYAN + f"Movie '{deletion_choice}' successfully deleted")
+            break
+        else:
+            counter += 1
+            if counter < max_tries:
+                print(f"Try again. {counter}/{max_tries} attempts used.")
+            else:
+                print("returning to main...")
+                break
 
     returning_to_main()
 
 
-def get_and_check_title_input(database: tuple[dict, dict], method: str) -> None | str | bool:
+def get_and_check_title_input(id_finder: dict, method: str) -> None | str | bool:
     """
     This function checks the title against id_finder.
     Returns the 'title' if the input is valid.
     Returns False if the input is invalid.
     """
-    _, id_finder = database
     title = input(Fore.LIGHTGREEN_EX + f"Enter movie name to {method}: ")
     title_exists = title in id_finder
 
@@ -237,56 +222,58 @@ def get_and_check_title_input(database: tuple[dict, dict], method: str) -> None 
     return None
 
 
-def handle_deleted_movies(database: tuple[dict, dict], delete_id: int):
+def handle_deleted_movies(delete_id: int):
     """
     This function moves the deleted data set into the trash.
     The trash keeps no more than 50 Items.
     IDs from deleted data cannot be reused as long as the Item remains in the trash.
     """
-    movies_db, _ = database
+    movies_db = movie_storage.get_movies()
+    deleted_movies = movie_storage.get_deleted_movies()
     movie = movies_db[delete_id]
-    DELETED_MOVIES.append(
+    deleted_movies.append(
         {"id": delete_id,
          "title": movie["title"],
          "rating": movie["rating"],
          "year of release": movie["year of release"]
          }
     )
-    if len(DELETED_MOVIES) > 50:
-        del DELETED_MOVIES[0]
+    movie_storage.save_deleted_movies(deleted_movies)
+    if len(deleted_movies) > 50:
+        movie_storage.delete_deleted_movie(0)
 
 
-def update_movie(database: tuple[dict, dict]):
+def update_movie():
     """This function updates the rating of an existing film."""
-    movies_db, id_finder = database
+    _, id_finder = create_database()
     print()
-    update_choice = get_and_check_title_input(database, "update")
+    update_choice = get_and_check_title_input(id_finder,"update")
 
     if update_choice:
         update_id = id_finder[update_choice]
         new_rating = float(input(Fore.LIGHTGREEN_EX + "Enter new movie rating (0-10): "))
-        movies_db[update_id]["rating"] = new_rating
+        movie_storage.update_movie(update_id, new_rating)
         print(Fore.CYAN + f"Movie {update_choice} successfully updated")
 
     returning_to_main()
 
 
-def stats_movies(database: tuple[dict, dict]):
+def stats_movies():
     """Calculates and prints movie statistics."""
+    movies_db = movie_storage.get_movies()
     print()
-    ratings = get_ratings(database)
+    ratings = get_ratings(movies_db)
     average_rating = get_average_movies_rating(ratings)
     median_rating = get_median_movies_rating(ratings)
     # Each result contains a list of movie title(s) and the matching rating.
-    best_movies = get_rating_bounds(database, ratings, max)
-    worst_movies = get_rating_bounds(database, ratings, min)
+    best_movies = get_rating_bounds(movies_db, ratings, max)
+    worst_movies = get_rating_bounds(movies_db, ratings, min)
     printing_stats(average_rating, median_rating, best_movies, worst_movies)
     returning_to_main()
 
 
-def get_ratings(database: tuple[dict, dict]) -> list[float]:
+def get_ratings(movies_db: dict) -> list[float]:
     """Returns all movie ratings as a list."""
-    movies_db, _ = database
     ratings = []
     for movie in movies_db.values():
         ratings.append(movie["rating"])
@@ -309,12 +296,11 @@ def get_median_movies_rating(ratings: list) -> float:
     return sorted_ratings[len_ratings//2]
 
 
-def get_rating_bounds(database: tuple[dict, dict], ratings: list, method) -> tuple[list, float]:
+def get_rating_bounds(movies_db: dict, ratings: list, method) -> tuple[list, float]:
     """
     Creates a universal function to get the max or min rating from ratings.
     The parameter method receives a function such as max or min.
     """
-    movies_db, _ = database
     rating = method(ratings)
     movies = []
     for movie in movies_db.values():
@@ -350,9 +336,9 @@ def printing_stats(average_rating: float,
         print(Fore.CYAN + f"Worst movie: {worst_movies_list[0]}, {worst_rating}")
 
 
-def random_movie(database: tuple[dict, dict]):
+def random_movie():
     """Prints a random movie recommendation from the movie database."""
-    movies_db, _ = database
+    movies_db = movie_storage.get_movies()
 
     movies = []
     for movie in movies_db.values():
@@ -364,9 +350,9 @@ def random_movie(database: tuple[dict, dict]):
     returning_to_main()
 
 
-def search_movie(database: tuple[dict, dict]):
+def search_movie():
     """Searches for movies containing the user's search input."""
-    movies_db, _ = database
+    movies_db = movie_storage.get_movies()
     print()
     search_word = input(Fore.LIGHTGREEN_EX + "Enter part of movie name: ").lower()
     counter = 0
@@ -378,14 +364,13 @@ def search_movie(database: tuple[dict, dict]):
 
     if counter == 0:
         print()
-        fuzzy_search(search_word, database)
+        fuzzy_search(search_word, movies_db)
 
     returning_to_main()
 
 
-def fuzzy_search(search_word, database: tuple[dict, dict]):
+def fuzzy_search(search_word, movies_db: dict):
     """Searches for similar movie titles using edit distance."""
-    movies_db, _ = database
     fuzzy_hits = []
     max_errors = max_deviation_error_value(search_word)
 
@@ -507,9 +492,9 @@ def fill_fuzzy_matrix(matrix: list,
     return matrix[-1][-1]
 
 
-def movies_sorted_ratings(database: tuple[dict, dict]):
+def movies_sorted_ratings():
     """Prints all movies sorted by rating from highest to lowest."""
-    movies_db, _ = database
+    movies_db = movie_storage.get_movies()
     print()
 
     # In Movie Project 1, this sorting was done manually.
@@ -526,9 +511,9 @@ def movies_sorted_ratings(database: tuple[dict, dict]):
     returning_to_main()
 
 
-def rating_histogram(database: tuple[dict, dict]):
+def rating_histogram():
     """Creates and saves a histogram of all movie ratings."""
-    movies_db, _ = database
+    movies_db = movie_storage.get_movies()
     print()
     movie_values = []
 
@@ -557,12 +542,11 @@ def returning_to_main():
 def main():
     """Runs the main program loop."""
     print(Fore.LIGHTMAGENTA_EX + "********** My Movies Database **********")
-    database = create_database()
     running = True
 
     while running:
         main_menu_choice = choose_from_main_menu()
-        running = forwarding_main_menu(main_menu_choice, database)
+        running = forwarding_main_menu(main_menu_choice)
 
 
 if __name__ == "__main__":
