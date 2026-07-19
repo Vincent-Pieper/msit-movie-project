@@ -1,1 +1,26 @@
-[{"id": 11, "title": "test-film1", "rating": 7.3, "year of release": 1994}, {"id": 12, "title": "test-film2", "rating": 7.3, "year of release": 1994}, {"id": 14, "title": "test-film3", "rating": 7.3, "year of release": 1994}, {"id": 7, "title": "12 Angry Men", "rating": 8.9, "year of release": 1957}]
+[
+    {
+        "id": 70,
+        "title": "The Girl Who Counted Trains",
+        "rating": 1.5,
+        "year of release": 2008
+    },
+    {
+        "id": 131,
+        "title": "Falling North",
+        "rating": 4.2,
+        "year of release": 1992
+    },
+    {
+        "id": 201,
+        "title": "Sunday People",
+        "rating": 2.0,
+        "year of release": 1989
+    },
+    {
+        "id": 170,
+        "title": "Rain on Sunday",
+        "rating": 9.9,
+        "year of release": 1991
+    }
+]
